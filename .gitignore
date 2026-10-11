@@ -1,0 +1,4 @@
+# ignoring development databases and env files...
+counts.db
+.env
+discord.log
