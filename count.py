@@ -1,15 +1,9 @@
-
-'''
-conn.execute(
-    """
-    INSERT INTO servers (server_id, max_count, user_id)
-    VALUES (?, ?, ?)
-    ON CONFLICT(server_id) DO UPDATE SET
-        max_count = excluded.max_count,
-        user_id = excluded.user_id
-    WHERE excluded.max_count > servers.max_count
-    """,
-    (server_id, new_count, user_id),
-)
-conn.commit()
-'''
+def check_count(current, last_user_id, user_id, text):
+    expected = 1 if current is None else current + 1
+    try:
+        number = int(text.strip())
+    except ValueError:
+        return "fail", None, None
+    if number != expected or user_id == last_user_id:
+        return "fail", None, None
+    return "ok", number, user_id

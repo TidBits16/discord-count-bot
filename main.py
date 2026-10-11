@@ -4,8 +4,9 @@ import logging
 from dotenv import load_dotenv
 import os
 
-# oh look! that's my script here
+# oh look! those are my scripts here
 import functions
+import count
 
 # create database if it doesn't already exist
 functions.create_database()
@@ -29,10 +30,46 @@ intents.message_content = True
 intents.members = True
 
 # defining commands
-@slash_commands.command(name="startcount", description="Start the count bot on this channel.")
+@slash_commands.command(name="startcount", description="Start the count bot in this channel.")
 
 async def startcount(interaction: discord.Interaction):
-    await interaction.response.send_message("this is a message")
+    old = functions.set_count_channel(interaction.guild_id, interaction.channel_id)
+    if old is None:
+        message = "Counting will happen in this channel."
+    if old != interaction.channel_id:
+        message = "Migrating the count to this channel."
+    else:
+        # derp
+        message = "This channel is already running the count :P"
+    # actually send the set message
+    await interaction.response.send_message(message)
+
+@count_bot.event
+async def on_message(message):
+    # quick check to avoid crash
+    if message.author.bot or message.guild is None:
+        return
+    row = functions.get_count(message.guild.id)
+    if row is None or message.channel.id != row["count_channel_id"]:
+        return
+    result, number, user_id = count.check_count(
+        row["current_count_number"],
+        row["last_count_user_id"],
+        message.author.id,
+        message.content,
+    )
+    if result == "ok":
+        if result == "ok":
+            # write changes to the db
+            functions.save_success(message.guild.id, number, user_id)
+            await message.add_reaction("✅")
+    else:
+        # failing message
+        await message.add_reaction("❌")
+        record = functions.fail_count(message.guild.id)
+        await message.channel.send(
+        f"{message.author.mention} messed up. This server's record is {record}."
+)
 
 @count_bot.event
 async def on_guild_remove(server):
