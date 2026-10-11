@@ -58,17 +58,25 @@ async def on_message(message):
         message.author.id,
         message.content,
     )
+    # ignore no number messages
+    if result == "ignore":
+        return
+    # react to number messages
     if result == "ok":
         if result == "ok":
             # write changes to the db
             functions.save_success(message.guild.id, number, user_id)
-            await message.add_reaction("✅")
+            # check if the current number is higher than highscore
+            if number > row["max_count"]:
+                await message.add_reaction("☑️")
+            else:
+                await message.add_reaction("✅")
     else:
         # failing message
         await message.add_reaction("❌")
         record = functions.fail_count(message.guild.id)
         await message.channel.send(
-        f"{message.author.mention} messed up. This server's record is {record}."
+        f"{message.author.mention} messed up. This server's record is {record}. The count starts at 1 again."
 )
 
 @count_bot.event

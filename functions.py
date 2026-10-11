@@ -58,7 +58,7 @@ def remove_server(server_id):
 def get_count(server_id):
     row = conn.execute(
         """
-        SELECT count_channel_id, current_count_number, last_count_user_id
+        SELECT count_channel_id, current_count_number, last_count_user_id, max_count
         FROM servers
         WHERE server_id = ?
         """,
